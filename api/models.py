@@ -14,6 +14,16 @@ class Row(models.Model):
 
     def __str__(self):
         return f"Row {self.pk} in {self.cluster}"
+    
+class Seat(models.Model):
+    row =models.ForeignKey(Row, on_delete=models.CASCADE)
+    seat_number = models.PositiveIntegerField()
+    
+    def __str__(self):
+        return f"Seat {self.pk} in {self.row}"
+    
+    class Meta:
+        unique_together = ['row', 'seat_number'] # the same seat number can't re-occur on the same row
 
 class StudentProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -36,7 +46,7 @@ class Guest(models.Model):
 
 class SeatAssignment(models.Model):
     student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE)
-    row = models.ForeignKey(Row, on_delete=models.CASCADE)
+    seat = models.ForeignKey(Seat, on_delete=models.CASCADE)
     # Add more fields like seat number if needed
     
     def __str__(self):
