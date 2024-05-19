@@ -18,6 +18,10 @@ from django.contrib import admin
 from django.urls import path, include
 from api.views import api_root
 
+admin.site.site_title = "UDOM-GCSC Site Admin"
+admin.site.site_header = "UDOM-GSCS administration"
+admin.site.index_title = "Site administration"
+
 urlpatterns = [
     path("", api_root),
     path("admin/", admin.site.urls),

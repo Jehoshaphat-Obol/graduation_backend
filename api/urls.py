@@ -13,6 +13,12 @@ from .views import (
     SeatDetail,
     SeatAssignmentList,
     SeatAssignmentDetail,
+    SeatingPlanList,
+    UnassignedStudentListView,
+    UnassignedGuestListView,
+    create_seating_plan,
+    TimetableDetailView,
+    TimetableListCreateView,
     api_root,
 )
 
@@ -28,9 +34,14 @@ urlpatterns = [
     path("guests/<int:pk>/", GuestDetail.as_view(), name="guest-detail"),
     path("seats/", SeatList.as_view(), name="seat-list"),
     path("seats/<int:pk>/", SeatDetail.as_view(), name="seat-detail"),
+    path('timetable/', TimetableListCreateView.as_view(), name='timetable-list'),
+    path('timetable/<int:pk>/', TimetableDetailView.as_view(), name='timetable-detail'),
     path("seat_assignments/", SeatAssignmentList.as_view(), name="assignment-list"),
-    path("seat_assignments/<int:pk>/",SeatAssignmentDetail.as_view(),name="assignment-detail",
-    ),
+    path("seat_assignments/<int:pk>/",SeatAssignmentDetail.as_view(),name="assignment-detail"),
+    path("seating_plan/", SeatingPlanList.as_view(), name="seating-plan"),
+    path("batch_student_plan/", create_seating_plan),
+    path("unassigned_students/", UnassignedStudentListView.as_view(), name="unassigned-students"),
+    path("unassigned_guests/", UnassignedGuestListView.as_view(), name="unassigned-guests"),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

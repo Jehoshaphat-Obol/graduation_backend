@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Cluster, Row, Seat, StudentProfile, Guest, SeatAssignment
+from .models import Cluster, Row, Seat, StudentProfile, Guest, SeatAssignment, Timetable
 
 
 class SeatInline(admin.TabularInline):
@@ -17,9 +17,9 @@ admin.site.register(Row, RowAdmin)
 
 
 class SeatAdmin(admin.ModelAdmin):
-    list_display = ["id", "row", "seat_number"]
+    list_display = ["id", "row", "seat_number", "ticket"]
     list_filter = ["row"]
-    search_fields = ["id", "row__cluster__name", "seat_number"]
+    search_fields = ["id", "row__cluster__name", "seat_number", "ticket"]
 
 
 admin.site.register(Seat, SeatAdmin)
@@ -41,7 +41,7 @@ admin.site.register(StudentProfile, StudentProfileAdmin)
 
 
 class GuestAdmin(admin.ModelAdmin):
-    list_display = ["name", "student"]
+    list_display = ["name", "student", 'status']
     search_fields = ["name", "student__user__username"]
 
 
@@ -49,9 +49,8 @@ admin.site.register(Guest, GuestAdmin)
 
 
 class SeatAssignmentAdmin(admin.ModelAdmin):
-    list_display = ["student", "seat"]
+    list_display = ["user", "seat"]
     list_filter = ["seat__row__cluster"]
-    search_fields = ["student__user__username", "seat__row__cluster__name"]
 
 
 admin.site.register(SeatAssignment, SeatAssignmentAdmin)
@@ -63,3 +62,12 @@ class ClusterAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Cluster, ClusterAdmin)
+
+
+class TimetableAdmin(admin.ModelAdmin):
+    list_display = ('event_name', 'start_time', 'end_time')
+    search_fields = ('event_name',)
+    list_filter = ('start_time', 'end_time')
+    ordering = ('start_time',)
+
+admin.site.register(Timetable, TimetableAdmin)

@@ -31,6 +31,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    # "admin_interface",
+    # "colorfield",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -55,6 +57,9 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
 ]
+
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 3000
+
 
 ROOT_URLCONF = "graduation_backend.urls"
 
@@ -112,7 +117,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Africa/Dar_es_Salaam"
 
 USE_I18N = True
 

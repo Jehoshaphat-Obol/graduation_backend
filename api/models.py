@@ -13,16 +13,18 @@ class Row(models.Model):
     number_of_seats = models.PositiveIntegerField()
 
     def __str__(self):
-        return f"Row {self.pk} in {self.cluster}"
+        return f"{self.cluster}-R{self.pk}"
 
 class Seat(models.Model):
     row =models.ForeignKey(Row, on_delete=models.CASCADE)
     seat_number = models.PositiveIntegerField()
+    ticket = models.CharField(max_length=250, default="")
     
     def __str__(self):
-        return f"Seat {self.pk} in {self.row}"
+        return f"{self.ticket}"
     
     class Meta:
+        ordering = ['row', 'seat_number']
         unique_together = ['row', 'seat_number'] # the same seat number can't re-occur on the same row
 
 class StudentProfile(models.Model):
@@ -48,20 +50,38 @@ class Guest(models.Model):
     class Status(models.TextChoices):
         EXPECTED = 'EX', 'Expected'
         POSTPONED = 'PP', 'Postponed'
-    student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, blank=True, null=True)
+    student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE, default=None, blank=True, null=True)
     name = models.CharField(max_length=100)
     type = models.CharField(max_length=3, default=Type.PARENT, choices=Type.choices)
     status = models.CharField(max_length=2, default=Status.EXPECTED, choices=Status.choices)
 
     # Add more fields as needed
 
+
     def __str__(self):
         return self.name
 
 class SeatAssignment(models.Model):
-    student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE, default=None)
-    seat = models.ForeignKey(Seat, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, default=None, blank=True,  null=True)
+    seat = models.OneToOneField(Seat, on_delete=models.CASCADE)
     # Add more fields like seat number if needed
     
     def __str__(self):
-        return f"{self.student} seated at {self.row}"
+        return f"{self.user}"
+    
+    class Meta:
+        unique_together = ['user', 'seat']
+    
+
+class Timetable(models.Model):
+    event_name = models.CharField(max_length=100)
+    event_description = models.TextField(blank=True)
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+
+    def __str__(self):
+        return self.event_name
+    
+    class Meta:
+        ordering = ['-start_time']
