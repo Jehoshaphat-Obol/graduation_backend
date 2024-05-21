@@ -1,11 +1,13 @@
 from django.shortcuts import render
-from rest_framework import generics
+from rest_framework import generics, permissions
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from rest_framework.reverse import reverse
 from rest_framework.response import Response
 from django.views.decorators.csrf import csrf_exempt
 from django.db import IntegrityError
+from django.contrib.auth.decorators import login_required
+
 from .models import Cluster, Row, StudentProfile, Guest, Seat, SeatAssignment, Timetable
 from .serializers import (
     ClusterSerializer,
@@ -43,72 +45,85 @@ def api_root(request, format=None):
 
 # CLUSTER
 class ClusterList(generics.ListCreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
     queryset = Cluster.objects.all()
     serializer_class = ClusterSerializer
 
 
 class ClusterDetail(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [permissions.IsAuthenticated]
     queryset = Cluster.objects.all()
     serializer_class = ClusterSerializer
 
 
 # ROW
 class RowList(generics.ListCreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
     queryset = Row.objects.all()
     serializer_class = RowSerializer
 
 
 class RowDetail(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [permissions.IsAuthenticated]
     queryset = Row.objects.all()
     serializer_class = RowSerializer
 
 
 # STUDENT PROFILE
 class StudentProfileList(generics.ListCreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
     queryset = StudentProfile.objects.all()
     serializer_class = StudentProfileSerializer
 
 
 class StudentProfileDetail(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [permissions.IsAuthenticated]
     queryset = StudentProfile.objects.all()
     serializer_class = StudentProfileSerializer
 
 
 # GUEST
 class GuestList(generics.ListCreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
     queryset = Guest.objects.all()
     serializer_class = GuestSerializer
 
 
 class GuestDetail(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [permissions.IsAuthenticated]
     queryset = Guest.objects.all()
     serializer_class = GuestSerializer
 
 
 # SEAT
 class SeatList(generics.ListCreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
     queryset = Seat.objects.all()
     serializer_class = SeatSerializer
 
 
 class SeatDetail(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [permissions.IsAuthenticated]
     queryset = Seat.objects.all()
     serializer_class = SeatSerializer
 
 
 # SEAT ASSIGNMENT
 class SeatAssignmentList(generics.ListCreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
     queryset = SeatAssignment.objects.all()
     serializer_class = SeatAssignmentSerializer
 
 
 class SeatAssignmentDetail(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [permissions.IsAuthenticated]
     queryset = SeatAssignment.objects.all()
     serializer_class = SeatAssignmentSerializer
 
 
 # SEAT ASSIGNMENT
 class SeatingPlanList(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
     queryset = SeatAssignment.objects.all()
     serializer_class = SeatingPlanSerializer
     
@@ -116,15 +131,18 @@ class SeatingPlanList(generics.ListAPIView):
 # TIMETABLE
 
 class TimetableListCreateView(generics.ListCreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
     queryset = Timetable.objects.all()
     serializer_class = TimetableSerializer
 
 class TimetableDetailView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [permissions.IsAuthenticated]
     queryset = Timetable.objects.all()
     serializer_class = TimetableSerializer
     
 # custom views
 @csrf_exempt
+@login_required
 def create_seating_plan(request):
     if request.method == 'POST':
         try:
@@ -149,6 +167,7 @@ def create_seating_plan(request):
         return JsonResponse({'valid_data': valid_data, 'errors': errors}, safe=False, status=207)  # 207 Multi-Status
 
 class UnassignedStudentListView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
     queryset = StudentProfile.objects.all()
     serializer_class = UnassignedStudentSerializer
 
@@ -161,6 +180,7 @@ class UnassignedStudentListView(generics.ListAPIView):
     
     
 class UnassignedGuestListView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
     queryset = Guest.objects.all()
     serializer_class = UnassignedGuestSerializer
 
