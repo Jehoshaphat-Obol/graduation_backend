@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from django.views.decorators.csrf import csrf_exempt
 from django.db import IntegrityError
 from django.contrib.auth.decorators import login_required
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .models import Cluster, Row, StudentProfile, Guest, Seat, SeatAssignment, Timetable
 from .serializers import (
@@ -19,7 +20,8 @@ from .serializers import (
     SeatingPlanSerializer,
     UnassignedStudentSerializer,
     UnassignedGuestSerializer,
-    TimetableSerializer
+    TimetableSerializer,
+    MyTokenObtainPairSerializer,
 )
 import json
 
@@ -190,3 +192,6 @@ class UnassignedGuestListView(generics.ListAPIView):
         queryset = queryset.exclude(user__seatassignment__isnull=False)
         queryset = queryset.exclude(status = 'PP')
         return queryset
+    
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer

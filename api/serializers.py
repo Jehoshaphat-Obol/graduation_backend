@@ -3,7 +3,7 @@ from .models import Cluster, Row, StudentProfile, Guest, Seat, SeatAssignment, T
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.hashers import make_password
-
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -249,3 +249,15 @@ class UnassignedGuestSerializer(serializers.ModelSerializer):
         except:
             representation['seat_assigned'] = None
         return representation
+    
+    
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        # Add group information to the token
+        groups = user.groups.values_list('name', flat=True)
+        token['groups'] = list(groups)
+        print(token.payload)
+        return token

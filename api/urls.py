@@ -20,16 +20,16 @@ from .views import (
     TimetableDetailView,
     TimetableListCreateView,
     api_root,
+    MyTokenObtainPairView
 )
 
 from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
     TokenRefreshView,
 )
 
 urlpatterns = [
     path("", api_root),
-    path('token/', TokenObtainPairView.as_view()),
+    path('token/', MyTokenObtainPairView.as_view()),
     path('token/refresh/', TokenRefreshView.as_view()),
     path("clusters/", ClusterList.as_view(), name="cluster-list"),
     path("clusters/<int:pk>/", ClusterDetail.as_view(), name="cluster-detail"),
