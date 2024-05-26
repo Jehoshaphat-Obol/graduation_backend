@@ -8,6 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db import IntegrityError
 from django.contrib.auth.decorators import login_required
 from rest_framework_simplejwt.views import TokenObtainPairView
+import json
 
 from .models import Cluster, Row, StudentProfile, Guest, Seat, SeatAssignment, Timetable
 from .serializers import (
@@ -23,7 +24,11 @@ from .serializers import (
     TimetableSerializer,
     MyTokenObtainPairSerializer,
 )
-import json
+
+from .permissions import (
+    IsCoordinator,
+    IsStudent,
+)
 
 
 # API ROOT
@@ -47,85 +52,85 @@ def api_root(request, format=None):
 
 # CLUSTER
 class ClusterList(generics.ListCreateAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsCoordinator]
     queryset = Cluster.objects.all()
     serializer_class = ClusterSerializer
 
 
 class ClusterDetail(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsCoordinator]
     queryset = Cluster.objects.all()
     serializer_class = ClusterSerializer
 
 
 # ROW
 class RowList(generics.ListCreateAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsCoordinator]
     queryset = Row.objects.all()
     serializer_class = RowSerializer
 
 
 class RowDetail(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsCoordinator]
     queryset = Row.objects.all()
     serializer_class = RowSerializer
 
 
 # STUDENT PROFILE
 class StudentProfileList(generics.ListCreateAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsCoordinator]
     queryset = StudentProfile.objects.all()
     serializer_class = StudentProfileSerializer
 
 
 class StudentProfileDetail(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsCoordinator]
     queryset = StudentProfile.objects.all()
     serializer_class = StudentProfileSerializer
 
 
 # GUEST
 class GuestList(generics.ListCreateAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsCoordinator]
     queryset = Guest.objects.all()
     serializer_class = GuestSerializer
 
 
 class GuestDetail(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsCoordinator]
     queryset = Guest.objects.all()
     serializer_class = GuestSerializer
 
 
 # SEAT
 class SeatList(generics.ListCreateAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsCoordinator]
     queryset = Seat.objects.all()
     serializer_class = SeatSerializer
 
 
 class SeatDetail(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsCoordinator]
     queryset = Seat.objects.all()
     serializer_class = SeatSerializer
 
 
 # SEAT ASSIGNMENT
 class SeatAssignmentList(generics.ListCreateAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsCoordinator]
     queryset = SeatAssignment.objects.all()
     serializer_class = SeatAssignmentSerializer
 
 
 class SeatAssignmentDetail(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsCoordinator]
     queryset = SeatAssignment.objects.all()
     serializer_class = SeatAssignmentSerializer
 
 
 # SEAT ASSIGNMENT
 class SeatingPlanList(generics.ListAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsCoordinator]
     queryset = SeatAssignment.objects.all()
     serializer_class = SeatingPlanSerializer
     
@@ -133,12 +138,12 @@ class SeatingPlanList(generics.ListAPIView):
 # TIMETABLE
 
 class TimetableListCreateView(generics.ListCreateAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsCoordinator]
     queryset = Timetable.objects.all()
     serializer_class = TimetableSerializer
 
 class TimetableDetailView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsCoordinator]
     queryset = Timetable.objects.all()
     serializer_class = TimetableSerializer
     
