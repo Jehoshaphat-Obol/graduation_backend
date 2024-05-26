@@ -22,8 +22,15 @@ from .views import (
     api_root,
 )
 
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
+
 urlpatterns = [
     path("", api_root),
+    path('token/', TokenObtainPairView.as_view()),
+    path('token/refresh/', TokenRefreshView.as_view()),
     path("clusters/", ClusterList.as_view(), name="cluster-list"),
     path("clusters/<int:pk>/", ClusterDetail.as_view(), name="cluster-detail"),
     path("rows/", RowList.as_view(), name="row-list"),
