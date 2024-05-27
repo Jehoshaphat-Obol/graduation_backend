@@ -28,6 +28,7 @@ from .serializers import (
 from .permissions import (
     IsCoordinator,
     IsStudent,
+    OnlyCoordinatorCanCreate,
 )
 
 
@@ -64,14 +65,12 @@ class ClusterDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 # ROW
-class RowList(generics.ListCreateAPIView):
-    permission_classes = [permissions.IsAuthenticated, IsCoordinator]
+class RowList(generics.ListAPIView):
     queryset = Row.objects.all()
     serializer_class = RowSerializer
 
 
-class RowDetail(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [permissions.IsAuthenticated, IsCoordinator]
+class RowDetail(generics.RetrieveAPIView):
     queryset = Row.objects.all()
     serializer_class = RowSerializer
 
@@ -130,17 +129,29 @@ class SeatAssignmentDetail(generics.RetrieveUpdateDestroyAPIView):
 
 # SEAT ASSIGNMENT
 class SeatingPlanList(generics.ListAPIView):
-    permission_classes = [permissions.IsAuthenticated, IsCoordinator]
-    queryset = SeatAssignment.objects.all()
+    permission_classes = [permissions.IsAuthenticated, IsCoordinator | IsStudent]
     serializer_class = SeatingPlanSerializer
     
-    
+    def get_queryset(self):
+        user = self.request.user
+        
+        # determine the user group
+        if(user.groups.filter(name='coordinator').exists()):
+            queryset = SeatAssignment.objects.all()
+            return queryset
+        elif(user.groups.filter(name='student').exists()):
+            queryset = SeatAssignment.objects.filter(user=user)
+            return queryset
+        else:
+            queryset = SeatAssignment.objects.none()
+            
 # TIMETABLE
 
 class TimetableListCreateView(generics.ListCreateAPIView):
-    permission_classes = [permissions.IsAuthenticated, IsCoordinator]
+    permission_classes = [permissions.IsAuthenticated, OnlyCoordinatorCanCreate]
     queryset = Timetable.objects.all()
     serializer_class = TimetableSerializer
+    
 
 class TimetableDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated, IsCoordinator]
@@ -174,7 +185,7 @@ def create_seating_plan(request):
         return JsonResponse({'valid_data': valid_data, 'errors': errors}, safe=False, status=207)  # 207 Multi-Status
 
 class UnassignedStudentListView(generics.ListAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsCoordinator]
     queryset = StudentProfile.objects.all()
     serializer_class = UnassignedStudentSerializer
 
@@ -187,7 +198,7 @@ class UnassignedStudentListView(generics.ListAPIView):
     
     
 class UnassignedGuestListView(generics.ListAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsCoordinator]
     queryset = Guest.objects.all()
     serializer_class = UnassignedGuestSerializer
 

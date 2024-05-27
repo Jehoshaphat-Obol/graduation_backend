@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Cluster, Row, StudentProfile, Guest, Seat, SeatAssignment, Timetable
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.hashers import make_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -76,7 +76,10 @@ class StudentProfileSerializer(serializers.ModelSerializer):
                 # Handle the case where password is not provided
                 raise serializers.ValidationError("Password is required")
 
+            group, created = Group.objects.get_or_create(name='student')
             user = user_serializer.save()
+            user.groups.add(group)
+            user.save()
             student_profile = StudentProfile.objects.create(user=user, **validated_data)
             return student_profile
         else:
@@ -111,7 +114,10 @@ class GuestSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError("Student profile does not exist.")
                         # Create the guest instance with the retrieved student profile and other validated data
                 
+                group, created = Group.objects.get_or_create(name='guest')
                 user =user_serializer.save()
+                user.groups.add(group)
+                user.save()
                 guest = Guest(student=student_profile,user=user, **validated_data)
                 guest.save()
                 return guest
@@ -259,5 +265,13 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         # Add group information to the token
         groups = user.groups.values_list('name', flat=True)
         token['groups'] = list(groups)
+        token['username'] = user.username
+        token['first_name'] = user.first_name
+        token['last_name'] = user.last_name
+        
+        if hasattr(user, 'studentprofile'):
+            token['degree_level'] = user.studentprofile.degree_level
+            token['degree_program'] = user.studentprofile.degree_program
+            token['college'] = user.studentprofile.college
         print(token.payload)
         return token
