@@ -85,6 +85,10 @@ class StudentProfileSerializer(serializers.ModelSerializer):
         else:
             raise serializers.ValidationError(user_serializer.errors)
 
+class StudentStatusUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudentProfile
+        fields = ['graduation_status']
 
 class GuestSerializer(serializers.ModelSerializer):
     student = serializers.CharField(source="student.user.username")

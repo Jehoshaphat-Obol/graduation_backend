@@ -20,7 +20,8 @@ from .views import (
     TimetableDetailView,
     TimetableListCreateView,
     api_root,
-    MyTokenObtainPairView
+    MyTokenObtainPairView,
+    student_update_status,
 )
 
 from rest_framework_simplejwt.views import (
@@ -49,6 +50,9 @@ urlpatterns = [
     path("batch_student_plan/", create_seating_plan),
     path("unassigned_students/", UnassignedStudentListView.as_view(), name="unassigned-students"),
     path("unassigned_guests/", UnassignedGuestListView.as_view(), name="unassigned-guests"),
+    
+    # custom urls
+    path("student_update_status/", student_update_status, name="student-update-status"),
 ]
 
 urlpatterns += [
