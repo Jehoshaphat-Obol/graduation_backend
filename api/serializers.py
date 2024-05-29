@@ -93,7 +93,6 @@ class StudentStatusUpdateSerializer(serializers.ModelSerializer):
 class GuestSerializer(serializers.ModelSerializer):
     student = serializers.CharField(source="student.user.username")
     user = UserSerializer()
-    print("processing")
     class Meta:
         model = Guest
         fields = ["id" ,"user", "student", "name", "type", 'status']
@@ -129,6 +128,27 @@ class GuestSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Password is required")
         else:
             raise serializers.ValidationError(user_serializer.errors)
+            
+    
+class ParentSerializer(serializers.ModelSerializer):
+    student = serializers.CharField(source="student.user.username")
+    class Meta:
+        model = Guest
+        fields = ["id", "student", "name", "type", 'status']
+        
+    def create(self, validated_data):
+        student_username = validated_data.pop('student')
+        try:
+            # Attempt to get the student profile from the database
+            student_profile = StudentProfile.objects.get(user__username=student_username['user']['username'])
+        except ObjectDoesNotExist:
+            # Handle case where the student profile does not exist
+            raise serializers.ValidationError("Student profile does not exist.")
+                # Create the guest instance with the retrieved student profile and other validated data
+        guest = Guest(student=student_profile, **validated_data)
+        guest.save()
+        return guest
+
             
         
         

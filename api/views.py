@@ -25,6 +25,7 @@ from .serializers import (
     TimetableSerializer,
     MyTokenObtainPairSerializer,
     StudentStatusUpdateSerializer,
+    ParentSerializer,
 )
 
 from .permissions import (
@@ -159,9 +160,29 @@ class TimetableDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated, IsCoordinator]
     queryset = Timetable.objects.all()
     serializer_class = TimetableSerializer
+    
+class ParentListView(generics.ListCreateAPIView):
+    permission_classes = [permissions.IsAuthenticated, IsStudent]
+    queryset = Guest.objects.all()
+    serializer_class = ParentSerializer
+    
+    def get_queryset(self):
+        student = self.request.student
+        queryset = Guest.objects.filter(student=student)
+        return queryset
+    
+class ParentDetails(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [permissions.IsAuthenticated, IsStudent]
+    queryset = Guest.objects.all()
+    serializer_class = ParentSerializer
+    
+    def get_queryset(self):
+        student = self.request.student
+        queryset = Guest.objects.filter(student=student)
+        return queryset
 
 @api_view(['PUT', 'GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated, IsStudent])
 def student_update_status(request):
     user = request.user
     user = StudentProfile.objects.get(user__id=user.id)

@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-
+from django.core.exceptions import ValidationError
 class Cluster(models.Model):
     name = models.CharField(max_length=100)
     # You might want to add additional fields like location or capacity
@@ -56,6 +56,16 @@ class Guest(models.Model):
     type = models.CharField(max_length=3, default=Type.PARENT, choices=Type.choices)
     status = models.CharField(max_length=2, default=Status.EXPECTED, choices=Status.choices)
 
+    def save(self, *args, **kwargs):
+        if self.student:
+            guest_count = Guest.objects.filter(student=self.student).count()
+            
+            if self.pk:
+                guest_count -= 1
+            if guest_count >= 2:
+                raise ValidationError(f"The student {self.student} can not have more than 2 guests")
+            
+        super().save(*args, **kwargs)
     # Add more fields as needed
 
 

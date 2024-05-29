@@ -7,7 +7,8 @@ class IsCoordinator(permissions.BasePermission):
 class IsStudent(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user and request.user.groups.filter(name='student').exists()
-    
+
+       
 class OnlyCoordinatorCanCreate(permissions.BasePermission):
     def has_permission(self, request, view):        
         if request.method == 'POST':

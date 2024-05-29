@@ -22,6 +22,8 @@ from .views import (
     api_root,
     MyTokenObtainPairView,
     student_update_status,
+    ParentListView,
+    ParentDetails,
 )
 
 from rest_framework_simplejwt.views import (
@@ -53,6 +55,8 @@ urlpatterns = [
     
     # custom urls
     path("student_update_status/", student_update_status, name="student-update-status"),
+    path("parents/", ParentListView.as_view()),
+    path("parents/<str:student>/", ParentDetails.as_view()),
 ]
 
 urlpatterns += [
