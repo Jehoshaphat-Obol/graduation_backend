@@ -49,7 +49,7 @@ admin.site.register(Guest, GuestAdmin)
 
 
 class SeatAssignmentAdmin(admin.ModelAdmin):
-    list_display = ["user", "seat"]
+    list_display = ["user", "seat", "link"]
     list_filter = ["seat__row__cluster"]
 
 

@@ -75,6 +75,8 @@ class Guest(models.Model):
 class SeatAssignment(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, default=None, blank=True,  null=True)
     seat = models.OneToOneField(Seat, on_delete=models.CASCADE)
+    link = models.CharField(max_length=255, blank=True, null=True)
+    
     # Add more fields like seat number if needed
     
     def __str__(self):

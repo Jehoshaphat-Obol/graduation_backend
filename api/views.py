@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import login_required
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth.models import User
 import json
+from django.db.models import Q
 
 from .models import Cluster, Row, StudentProfile, Guest, Seat, SeatAssignment, Timetable
 from .serializers import (
@@ -143,7 +144,10 @@ class SeatingPlanList(generics.ListAPIView):
             queryset = SeatAssignment.objects.all()
             return queryset
         elif(user.groups.filter(name='student').exists()):
-            queryset = SeatAssignment.objects.filter(user=user)
+            students_guest = Guest.objects.filter(student__user=user)
+            guest_users = students_guest.values_list('user', flat=True)
+            guest = list(guest_users)
+            queryset = SeatAssignment.objects.filter(Q(user=user) | Q(user__in=guest))
             return queryset
         else:
             queryset = SeatAssignment.objects.none()
@@ -167,8 +171,8 @@ class ParentListView(generics.ListCreateAPIView):
     serializer_class = ParentSerializer
     
     def get_queryset(self):
-        student = self.request.student
-        queryset = Guest.objects.filter(student=student)
+        student = self.request.user
+        queryset = Guest.objects.filter(student__user__username=student)
         return queryset
     
 class ParentDetails(generics.RetrieveUpdateDestroyAPIView):
@@ -200,7 +204,7 @@ def student_update_status(request):
 
 # custom views
 @csrf_exempt
-@login_required
+@permission_classes([permissions.IsAuthenticated, IsCoordinator])
 def create_seating_plan(request):
     if request.method == 'POST':
         try:

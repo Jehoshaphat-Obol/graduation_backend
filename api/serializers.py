@@ -4,6 +4,12 @@ from django.contrib.auth.models import User, Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.hashers import make_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+import random, string
+
+   
+def generate_random_string(length=8):
+    characters = string.ascii_letters + string.digits
+    return ''.join(random.choice(characters) for i in range(length)) 
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -129,7 +135,8 @@ class GuestSerializer(serializers.ModelSerializer):
         else:
             raise serializers.ValidationError(user_serializer.errors)
             
-    
+
+
 class ParentSerializer(serializers.ModelSerializer):
     student = serializers.CharField(source="student.user.username")
     class Meta:
@@ -141,11 +148,23 @@ class ParentSerializer(serializers.ModelSerializer):
         try:
             # Attempt to get the student profile from the database
             student_profile = StudentProfile.objects.get(user__username=student_username['user']['username'])
+            user = User.objects.create_user(
+                username=student_username['user']['username']+f"_{generate_random_string()}",
+                password=generate_random_string() + generate_random_string(),
+            )
+            user.first_name = validated_data['name']
+            group, created = Group.objects.get_or_create(name='guest')
+            user.save()
+            user.groups.add(group)
+            user.save()
+            
+            
         except ObjectDoesNotExist:
             # Handle case where the student profile does not exist
             raise serializers.ValidationError("Student profile does not exist.")
                 # Create the guest instance with the retrieved student profile and other validated data
-        guest = Guest(student=student_profile, **validated_data)
+        print("Saving")
+        guest = Guest(student=student_profile, user=user,**validated_data)
         guest.save()
         return guest
 
@@ -174,6 +193,7 @@ class SeatingPlanSerializer(serializers.ModelSerializer):
                     'ticket': obj.seat.ticket,
                     'student': guest.student.user.username or "",
                     'username': user.username,
+                    'link': obj.link,
                 }
         elif hasattr(user, 'studentprofile'):  # Check if the user is a student
             student_profile = user.studentprofile
@@ -210,7 +230,8 @@ class SeatAssignmentSerializer(serializers.Serializer):
         except Seat.DoesNotExist:
             raise serializers.ValidationError("Seat does not exist")
 
-        seat_assignment = SeatAssignment.objects.create(user=user, seat=seat)
+        link = generate_random_string(255)
+        seat_assignment = SeatAssignment.objects.create(user=user, seat=seat, link=link)
         return seat_assignment
     def update(self, instance, validated_data):
         username = validated_data.pop('username')
@@ -244,7 +265,8 @@ class SeatAssignmentSerializer(serializers.Serializer):
             'id': instance.id,
             'username': instance.user.username,
             'ticket': instance.seat.ticket,
-            'seat_number': instance.seat.seat_number
+            'seat_number': instance.seat.seat_number,
+            'link': instance.link,
         }
 
 class UnassignedStudentSerializer(serializers.ModelSerializer):
@@ -266,6 +288,8 @@ class UnassignedStudentSerializer(serializers.ModelSerializer):
 
 class UnassignedGuestSerializer(serializers.ModelSerializer):
     user = UserSerializer()
+    student = serializers.CharField(source="student.user.username")
+    
     class Meta:
         model = Guest
         fields = ['id', 'user', 'name', 'type', 'student', 'status']
