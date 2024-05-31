@@ -135,12 +135,15 @@ class SeatAssignmentDetail(generics.RetrieveUpdateDestroyAPIView):
 
 # SEAT ASSIGNMENT
 class SeatingPlanList(generics.ListAPIView):
-    permission_classes = [permissions.IsAuthenticated, IsCoordinator | IsStudent | IsGuest]
     serializer_class = SeatingPlanSerializer
     
     def get_queryset(self):
         user = self.request.user
+        link = self.request.query_params.get('link', None)
         
+        if link is not None:
+            queryset = SeatAssignment.objects.filter(link=link)
+            return queryset
         # determine the user group
         if(user.groups.filter(name='coordinator').exists()):
             queryset = SeatAssignment.objects.all()
