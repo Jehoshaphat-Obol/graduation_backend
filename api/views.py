@@ -26,6 +26,7 @@ from .serializers import (
     TimetableSerializer,
     MyTokenObtainPairSerializer,
     StudentStatusUpdateSerializer,
+    GuestStatusUpdateSerializer,
     ParentSerializer,
 )
 
@@ -33,6 +34,7 @@ from .permissions import (
     IsCoordinator,
     IsStudent,
     OnlyCoordinatorCanCreate,
+    IsGuest,
 )
 
 
@@ -133,7 +135,7 @@ class SeatAssignmentDetail(generics.RetrieveUpdateDestroyAPIView):
 
 # SEAT ASSIGNMENT
 class SeatingPlanList(generics.ListAPIView):
-    permission_classes = [permissions.IsAuthenticated, IsCoordinator | IsStudent]
+    permission_classes = [permissions.IsAuthenticated, IsCoordinator | IsStudent | IsGuest]
     serializer_class = SeatingPlanSerializer
     
     def get_queryset(self):
@@ -144,6 +146,12 @@ class SeatingPlanList(generics.ListAPIView):
             queryset = SeatAssignment.objects.all()
             return queryset
         elif(user.groups.filter(name='student').exists()):
+            students_guest = Guest.objects.filter(student__user=user)
+            guest_users = students_guest.values_list('user', flat=True)
+            guest = list(guest_users)
+            queryset = SeatAssignment.objects.filter(Q(user=user) | Q(user__in=guest))
+            return queryset
+        elif(user.groups.filter(name='guest').exists()):
             students_guest = Guest.objects.filter(student__user=user)
             guest_users = students_guest.values_list('user', flat=True)
             guest = list(guest_users)
@@ -202,6 +210,23 @@ def student_update_status(request):
         serializer = StudentStatusUpdateSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+@api_view(['PUT', 'GET'])
+@permission_classes([permissions.IsAuthenticated, IsGuest])
+def guest_update_status(request):
+    user = request.user
+    user = Guest.objects.get(user__id=user.id)
+    
+    if request.method == 'PUT':
+        serializer = GuestStatusUpdateSerializer(user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    elif request.method == 'GET':
+        serializer = GuestStatusUpdateSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 # custom views
 @csrf_exempt
 @permission_classes([permissions.IsAuthenticated, IsCoordinator])

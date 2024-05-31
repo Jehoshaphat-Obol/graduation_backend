@@ -22,6 +22,7 @@ from .views import (
     api_root,
     MyTokenObtainPairView,
     student_update_status,
+    guest_update_status,
     ParentListView,
     ParentDetails,
 )
@@ -55,6 +56,7 @@ urlpatterns = [
     
     # custom urls
     path("student_update_status/", student_update_status, name="student-update-status"),
+    path("guest_update_status/", guest_update_status, name="guest-update-status"),
     path("parents/", ParentListView.as_view()),
     path("parents/<str:student>/", ParentDetails.as_view()),
 ]

@@ -95,9 +95,15 @@ class StudentStatusUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentProfile
         fields = ['graduation_status']
+        
+
+class GuestStatusUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Guest
+        fields = ['status']
 
 class GuestSerializer(serializers.ModelSerializer):
-    student = serializers.CharField(source="student.user.username")
+    student = serializers.CharField(source="student.user.username", allow_null=True, required=False)
     user = UserSerializer()
     class Meta:
         model = Guest
@@ -113,11 +119,12 @@ class GuestSerializer(serializers.ModelSerializer):
         user_serializer = UserSerializer(data=user_data)
         
         if user_serializer.is_valid():
-            student_username = validated_data.pop('student')
+            student_username = validated_data.pop('student', None)
             if password:
                 try:
                     # Attempt to get the student profile from the database
-                    student_profile = StudentProfile.objects.get(user__username=student_username['user']['username'])
+                    if(student_username != None):
+                        student_profile = StudentProfile.objects.get(user__username=student_username['user']['username'])
                 except ObjectDoesNotExist:
                     # Handle case where the student profile does not exist
                     raise serializers.ValidationError("Student profile does not exist.")
@@ -127,7 +134,11 @@ class GuestSerializer(serializers.ModelSerializer):
                 user =user_serializer.save()
                 user.groups.add(group)
                 user.save()
-                guest = Guest(student=student_profile,user=user, **validated_data)
+                if(student_username != None):
+                    if(student_profile):
+                        guest = Guest(student=student_profile,user=user, **validated_data)
+                else:
+                    guest = Guest(user=user, **validated_data)
                 guest.save()
                 return guest
             else:
@@ -184,6 +195,10 @@ class SeatingPlanSerializer(serializers.ModelSerializer):
         user = obj.user
         if hasattr(user, 'guest'):  # Check if the user is a guest
             guest = user.guest
+            student = guest.student
+            
+            if student is not None:
+                student = student.user.username or ""
             if guest.get_status_display() ==  "Expected":
                 return {
                     'type': 'guest',
@@ -191,7 +206,7 @@ class SeatingPlanSerializer(serializers.ModelSerializer):
                     'guest_type': guest.get_type_display(),  # Get display value of the 'type' field
                     'status': guest.status,  # Get display value of the 'status' field
                     'ticket': obj.seat.ticket,
-                    'student': guest.student.user.username or "",
+                    'student': student,
                     'username': user.username,
                     'link': obj.link,
                 }
@@ -288,7 +303,7 @@ class UnassignedStudentSerializer(serializers.ModelSerializer):
 
 class UnassignedGuestSerializer(serializers.ModelSerializer):
     user = UserSerializer()
-    student = serializers.CharField(source="student.user.username")
+    student = serializers.CharField(source="student.user.username", allow_null=True, required=False)
     
     class Meta:
         model = Guest
@@ -321,5 +336,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
             token['degree_level'] = user.studentprofile.degree_level
             token['degree_program'] = user.studentprofile.degree_program
             token['college'] = user.studentprofile.college
+        elif hasattr(user, 'guest'):
+            token['type'] = user.guest.type
         print(token.payload)
         return token
