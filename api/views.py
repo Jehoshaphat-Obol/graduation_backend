@@ -13,7 +13,7 @@ from django.contrib.auth.models import User
 from django.db.models import Q
 import json, csv
 
-from .models import Cluster, Row, StudentProfile, Guest, Seat, SeatAssignment, Timetable
+from .models import Cluster, Row, StudentProfile, Guest, Seat, SeatAssignment, Timetable, Report, Notification, Message
 from .serializers import (
     ClusterSerializer,
     RowSerializer,
@@ -29,6 +29,9 @@ from .serializers import (
     StudentStatusUpdateSerializer,
     GuestStatusUpdateSerializer,
     ParentSerializer,
+    ReportSerializer,
+    MessageSerializer,
+    NotificationSerializer,
 )
 
 from .permissions import (
@@ -54,6 +57,9 @@ def api_root(request, format=None):
             "seating_plan": reverse("seating-plan", request=request, format=format),
             "unassigned_student": reverse("unassigned-students", request=request, format=format),
             "unassigned_guests": reverse("unassigned-guests", request=request, format=format),
+            "reports": reverse("report-list-create", request=request, format=format),
+            "messages": reverse("message-list-create", request=request, format=format),
+            "notifications": reverse("notification-list-create", request=request, format=format),
         }
     )
 
@@ -368,3 +374,47 @@ class UnassignedGuestListView(generics.ListAPIView):
     
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
+    
+    
+class ReportListCreateView(generics.ListCreateAPIView):
+    queryset = Report.objects.all()
+    serializer_class = ReportSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Report.objects.filter(student=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(student=self.request.user)
+
+class ReportDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Report.objects.all()
+    serializer_class = ReportSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+class MessageListCreateView(generics.ListCreateAPIView):
+    queryset = Message.objects.all()
+    serializer_class = MessageSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(coordinator=self.request.user)
+
+class MessageDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Message.objects.all()
+    serializer_class = MessageSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+class NotificationListCreateView(generics.ListCreateAPIView):
+    queryset = Notification.objects.all()
+    serializer_class = NotificationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+    def perform_create(self, serializer):
+        serializer.save(coordinator=self.request.user)
+
+class NotificationDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Notification.objects.all()
+    serializer_class = NotificationSerializer
+    permission_classes = [permissions.IsAuthenticated]

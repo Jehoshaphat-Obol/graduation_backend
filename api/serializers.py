@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Cluster, Row, StudentProfile, Guest, Seat, SeatAssignment, Timetable
+from .models import Cluster, Row, StudentProfile, Guest, Seat, SeatAssignment, Timetable, Report, Message, Notification
 from django.contrib.auth.models import User, Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.hashers import make_password
@@ -150,7 +150,6 @@ class GuestSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(user_serializer.errors)
             
 
-
 class ParentSerializer(serializers.ModelSerializer):
     student = serializers.CharField(source="student.user.username")
     class Meta:
@@ -181,11 +180,6 @@ class ParentSerializer(serializers.ModelSerializer):
         guest = Guest(student=student_profile, user=user,**validated_data)
         guest.save()
         return guest
-
-            
-        
-        
-
 
 class SeatingPlanSerializer(serializers.ModelSerializer):
     user_details = serializers.SerializerMethodField()
@@ -343,3 +337,51 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
             token['type'] = user.guest.type
         print(token.payload)
         return token
+    
+    
+class ReportSerializer(serializers.ModelSerializer):
+    student = UserSerializer(read_only=True)
+    reference_token = serializers.UUIDField(read_only=True)
+
+    class Meta:
+        model = Report
+        fields = ['id', 'student', 'subject', 'description', 'reference_token', 'is_resolved', 'created_at', 'updated_at']
+
+    def create(self, validated_data):
+        request = self.context.get('request', None)
+        if request is not None:
+            validated_data['student'] = request.user
+        return super().create(validated_data)
+
+class MessageSerializer(serializers.ModelSerializer):
+    coordinator = UserSerializer(read_only=True)
+    student = UserSerializer(read_only=True)
+    report = serializers.PrimaryKeyRelatedField(queryset=Report.objects.all(), required=False, allow_null=True)
+
+    class Meta:
+        model = Message
+        fields = ['id', 'coordinator', 'student', 'content', 'report', 'created_at']
+
+    def create(self, validated_data):
+        request = self.context.get('request', None)
+        if request is not None:
+            validated_data['coordinator'] = request.user
+        return super().create(validated_data)
+
+class NotificationSerializer(serializers.ModelSerializer):
+    coordinator = UserSerializer(read_only=True)
+    users = UserSerializer(many=True, read_only=True)
+    user_ids = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), many=True, write_only=True)
+
+    class Meta:
+        model = Notification
+        fields = ['id', 'coordinator', 'users', 'user_ids', 'content', 'created_at']
+
+    def create(self, validated_data):
+        request = self.context.get('request', None)
+        if request is not None:
+            validated_data['coordinator'] = request.user
+        users = validated_data.pop('user_ids', [])
+        notification = super().create(validated_data)
+        notification.users.set(users)
+        return notification

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Cluster, Row, Seat, StudentProfile, Guest, SeatAssignment, Timetable
+from .models import Cluster, Row, Seat, StudentProfile, Guest, SeatAssignment, Timetable , Report, Message, Notification
 
 
 class SeatInline(admin.TabularInline):
@@ -71,3 +71,26 @@ class TimetableAdmin(admin.ModelAdmin):
     ordering = ('start_time',)
 
 admin.site.register(Timetable, TimetableAdmin)
+
+class ReportAdmin(admin.ModelAdmin):
+    list_display = ('reference_token', 'student', 'subject', 'is_resolved', 'created_at', 'updated_at')
+    list_filter = ('is_resolved', 'created_at', 'updated_at')
+    search_fields = ('reference_token', 'student__username', 'student__first_name', 'student__last_name', 'subject')
+    readonly_fields = ('reference_token', 'created_at', 'updated_at')
+admin.site.register(Report, ReportAdmin)
+
+class MessageAdmin(admin.ModelAdmin):
+    list_display = ('id', 'coordinator', 'student', 'created_at')
+    list_filter = ('coordinator', 'student', 'created_at')
+    search_fields = ('coordinator__username', 'coordinator__first_name', 'coordinator__last_name', 'student__username', 'student__first_name', 'student__last_name', 'content')
+    readonly_fields = ('created_at',)
+admin.site.register(Message, MessageAdmin)
+
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'coordinator', 'created_at')
+    list_filter = ('coordinator', 'created_at')
+    search_fields = ('coordinator__username', 'coordinator__first_name', 'coordinator__last_name', 'content')
+    readonly_fields = ('created_at',)
+    filter_horizontal = ('users',)
+
+admin.site.register(Notification, NotificationAdmin)
