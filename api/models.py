@@ -1,6 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+import uuid
+
+
 class Cluster(models.Model):
     name = models.CharField(max_length=100)
     # You might want to add additional fields like location or capacity
@@ -97,3 +100,37 @@ class Timetable(models.Model):
     
     class Meta:
         ordering = ['-start_time']
+        
+# Report Model
+class Report(models.Model):
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reports')
+    subject = models.CharField(max_length=255)
+    description = models.TextField()
+    reference_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    is_resolved = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Report {self.reference_token} by {self.student.username}"
+
+# Message Model
+class Message(models.Model):
+    coordinator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='messages')
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
+    content = models.TextField()
+    report = models.ForeignKey(Report, on_delete=models.SET_NULL, null=True, blank=True, related_name='responses')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Message from {self.coordinator.username} to {self.student.username}"
+
+# Notification Model
+class Notification(models.Model):
+    coordinator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifices')
+    users = models.ManyToManyField(User, related_name='notifications')
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Notification from {self.coordinator.username}"
