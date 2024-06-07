@@ -382,6 +382,9 @@ class ReportListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        user = self.request.user
+        if(user.groups.filter(name='coordinator').exists()):
+            return Report.objects.all();
         return Report.objects.filter(student=self.request.user)
 
     def perform_create(self, serializer):
