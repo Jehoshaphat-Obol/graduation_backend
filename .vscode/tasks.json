@@ -1,0 +1,17 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run DJango Server",
+            "command": "python manage.py runserver",
+            "type": "shell",
+            "problemMatcher": [],
+            "runOptions": {
+                "runOn": "folderOpen",
+            },
+            "options": {
+                "cwd": "${workspaceFolder}",
+            }
+        }
+    ]
+}

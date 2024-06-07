@@ -4,13 +4,14 @@ from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.reverse import reverse
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser
 from django.views.decorators.csrf import csrf_exempt
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.contrib.auth.decorators import login_required
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth.models import User
-import json
 from django.db.models import Q
+import json, csv
 
 from .models import Cluster, Row, StudentProfile, Guest, Seat, SeatAssignment, Timetable
 from .serializers import (
@@ -93,13 +94,97 @@ class StudentProfileDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = StudentProfile.objects.all()
     serializer_class = StudentProfileSerializer
 
+class BatchStudentProfileUpload(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated, IsCoordinator]
+    parser_classes = [MultiPartParser, FormParser]
+    
+    def post(self, request, *args, **kwargs):
+        file = request.FILES.get('file')
+        if not file:
+            return JsonResponse({'detail': 'No file Uploaded.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            csv_file = csv.reader(file.read().decode('utf-8').splitlines())
+            headers = next(csv_file)
+            headers = [x.strip() for x in headers]
+            
+            created_profiles = []
+            failed_profiles = []
+            for row in csv_file:
+                data=dict(zip(headers, row))
+                user_data = {
+                    'username': data['username'],
+                    'email': data['email'],
+                    'first_name': data['first_name'],
+                    'last_name': data['last_name'],
+                    'password': data['password'],
+                }
+                
+                profile_data = {
+                    'user': user_data,
+                    'graduation_status': data['graduation_status'],
+                    'degree_program': data['degree_program'],
+                    'degree_level': data['degree_level'],
+                    'college': data['college'],
+                }
+                
+                profile_serializer = StudentProfileSerializer(data=profile_data)
+                if profile_serializer.is_valid():
+                    profile_serializer.save()
+                    created_profiles.append(profile_serializer.data)
+                else:
+                    failed_profiles = {
+                        "name": user_data['username'],
+                        "error": profile_serializer.errors,
+                        }
+
+            return JsonResponse({'created_profiles': created_profiles, "failed_profiles": failed_profiles}, status=status.HTTP_201_CREATED)
+                    
+        except Exception as e:
+            return JsonResponse({'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 # GUEST
 class GuestList(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated, IsCoordinator]
     queryset = Guest.objects.all()
     serializer_class = GuestSerializer
-
+    
+class BatchGuestUpload(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated, IsCoordinator]
+    parser_classes = [MultiPartParser, FormParser]
+    
+    def post(self, request, *args, **kwargs):
+        file = request.FILES.get('file')
+        if not file:
+            return JsonResponse({'detail': 'No file Uploaded.'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            csv_file = csv.reader(file.read().decode('utf-8').splitlines())
+            headers = next(csv_file)
+            headers = [x.strip() for x in headers]
+            failed = created = []
+            for row in csv_file:
+                data=dict(zip(headers, row))
+                formated_data = {
+                    "student": data["student"],
+                    "name": data["name"],
+                    "password": data["password"],
+                    "type": data["type"],
+                    "status": data["status"],
+                    "user": {
+                        "username": data["name"],
+                        "password": data["password"],
+                    }
+                }
+                guest_serializer = GuestSerializer(data=formated_data)
+                if(guest_serializer.is_valid()):
+                    guest_serializer.save()
+                    created.append(guest_serializer.data)
+                else:
+                    failed.append(guest_serializer.data)
+            return JsonResponse({'created': created, 'failed': failed}, status=status.HTTP_201_CREATED)
+        
+        except Exception as e:
+            return JsonResponse({'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
 
 class GuestDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated, IsCoordinator]

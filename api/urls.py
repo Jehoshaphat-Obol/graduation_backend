@@ -25,6 +25,8 @@ from .views import (
     guest_update_status,
     ParentListView,
     ParentDetails,
+    BatchStudentProfileUpload,
+    BatchGuestUpload,
 )
 
 from rest_framework_simplejwt.views import (
@@ -41,8 +43,10 @@ urlpatterns = [
     path("rows/<int:pk>/", RowDetail.as_view(), name="row-detail"),
     path("students/", StudentProfileList.as_view(), name="student-list"),
     path("students/<int:pk>/", StudentProfileDetail.as_view(), name="student-detail"),
+    path("students/batch/", BatchStudentProfileUpload.as_view(), name="student-batch-upload"),
     path("guests/", GuestList.as_view(), name="guest-list"),
     path("guests/<int:pk>/", GuestDetail.as_view(), name="guest-detail"),
+    path("guests/batch/", BatchGuestUpload.as_view(), name="guest-batch-upload"),
     path("seats/", SeatList.as_view(), name="seat-list"),
     path("seats/<int:pk>/", SeatDetail.as_view(), name="seat-detail"),
     path('timetable/', TimetableListCreateView.as_view(), name='timetable-list'),

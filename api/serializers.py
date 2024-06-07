@@ -84,9 +84,12 @@ class StudentProfileSerializer(serializers.ModelSerializer):
 
             group, created = Group.objects.get_or_create(name='student')
             user = user_serializer.save()
+            print("created user")
             user.groups.add(group)
             user.save()
+            print("added group")
             student_profile = StudentProfile.objects.create(user=user, **validated_data)
+            print("profile created")
             return student_profile
         else:
             raise serializers.ValidationError(user_serializer.errors)
