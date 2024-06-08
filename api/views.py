@@ -12,6 +12,9 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
+
+
 import json, csv
 
 from .models import Cluster, Row, StudentProfile, Guest, Seat, SeatAssignment, Timetable, Report, Notification, Message
@@ -400,10 +403,25 @@ class ReportDetailView(generics.RetrieveUpdateDestroyAPIView):
 class MessageListCreateView(generics.ListCreateAPIView):
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, OnlyCoordinatorCanCreate]
+
 
     def perform_create(self, serializer):
-        serializer.save(coordinator=self.request.user)
+        student_id = self.request.data.get('student')
+        report_id = self.request.data.get('report')
+        
+        # Fetch the student and report instances
+        student = get_object_or_404(User, id=student_id)
+        report = get_object_or_404(Report, id=report_id) if report_id else None
+        
+        serializer.save(coordinator=self.request.user, student=student, report=report)
+    
+    def get_queryset(self):
+        user = self.request.user
+        if user.groups.filter(name='coordinator').exists():
+            return Message.objects.all()
+        else:
+            return Message.objects.filter(student=user)
 
 class MessageDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Message.objects.all()
@@ -413,7 +431,7 @@ class MessageDetailView(generics.RetrieveUpdateDestroyAPIView):
 class NotificationListCreateView(generics.ListCreateAPIView):
     queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, OnlyCoordinatorCanCreate]
 
 
     def perform_create(self, serializer):
@@ -434,7 +452,7 @@ class NotificationDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class UserListView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated | IsCoordinator]
 
     def get(self, request, *args, **kwargs):
         if request.user.groups.filter(name='coordinator').exists():

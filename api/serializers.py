@@ -358,16 +358,22 @@ class MessageSerializer(serializers.ModelSerializer):
     coordinator = UserSerializer(read_only=True)
     student = UserSerializer(read_only=True)
     report = serializers.PrimaryKeyRelatedField(queryset=Report.objects.all(), required=False, allow_null=True)
+    report_token = serializers.SerializerMethodField()
 
     class Meta:
         model = Message
-        fields = ['id', 'coordinator', 'student', 'content', 'report', 'created_at']
+        fields = ['id', 'coordinator', 'student', 'content', 'report', 'created_at', 'report_token']
 
     def create(self, validated_data):
         request = self.context.get('request', None)
         if request is not None:
             validated_data['coordinator'] = request.user
         return super().create(validated_data)
+    
+    def get_report_token(self, obj):
+        if obj.report:
+            return obj.report.reference_token
+        return None
 
 class NotificationSerializer(serializers.ModelSerializer):
     coordinator = UserSerializer(read_only=True)
