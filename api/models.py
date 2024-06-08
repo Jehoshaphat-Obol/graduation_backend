@@ -134,3 +134,6 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification from {self.coordinator.username}"
+    
+    class Meta:
+        ordering = ['-created_at']

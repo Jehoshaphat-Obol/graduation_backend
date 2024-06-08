@@ -9,6 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db import IntegrityError, transaction
 from django.contrib.auth.decorators import login_required
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.views import APIView
 from django.contrib.auth.models import User
 from django.db.models import Q
 import json, csv
@@ -32,6 +33,7 @@ from .serializers import (
     ReportSerializer,
     MessageSerializer,
     NotificationSerializer,
+    UserSerializer,
 )
 
 from .permissions import (
@@ -417,7 +419,28 @@ class NotificationListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(coordinator=self.request.user)
 
+    def get_queryset(self):
+        user = self.request.user
+        if user.groups.filter(name='coordinator').exists():
+            # If the user is a coordinator, return all notifications
+            return Notification.objects.all()
+        else:
+            # If the user is not a coordinator, return notifications sent to them
+            return Notification.objects.filter(users=user)
 class NotificationDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+class UserListView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        if request.user.groups.filter(name='coordinator').exists():
+            students = User.objects.filter(groups__name='student')
+            guests = User.objects.filter(groups__name='guest')
+            users = students.union(guests)
+            serializer = UserSerializer(users, many=True)
+            return Response(serializer.data)
+        return Response({})

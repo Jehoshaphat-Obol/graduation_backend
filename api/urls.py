@@ -10,7 +10,7 @@ from .views import (
     ParentListView,    ParentDetails,    BatchStudentProfileUpload,
     BatchGuestUpload,   ReportListCreateView,   ReportDetailView,
     MessageListCreateView,  MessageDetailView,   NotificationListCreateView,
-    NotificationDetailView
+    NotificationDetailView, UserListView
 )
 
 from rest_framework_simplejwt.views import (
@@ -21,6 +21,7 @@ urlpatterns = [
     path("", api_root),
     path('token/', MyTokenObtainPairView.as_view()),
     path('token/refresh/', TokenRefreshView.as_view()),
+    path('users/', UserListView.as_view(), name='user-list'),
     path("clusters/", ClusterList.as_view(), name="cluster-list"),
     path("clusters/<int:pk>/", ClusterDetail.as_view(), name="cluster-detail"),
     path("rows/", RowList.as_view(), name="row-list"),

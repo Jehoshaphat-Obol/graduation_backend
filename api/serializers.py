@@ -12,9 +12,10 @@ def generate_random_string(length=8):
     return ''.join(random.choice(characters) for i in range(length)) 
 
 class UserSerializer(serializers.ModelSerializer):
+    groups = serializers.SlugRelatedField(slug_field='name', read_only=True, many=True)
     class Meta:
         model = User
-        fields = ["username", "password", "email", "first_name", "last_name"]
+        fields = ["id", "username", "password", "email", "first_name", "last_name", "groups"]
         extra_kwargs = {
             "password": {"write_only": True},  # Make password write-only
         }
